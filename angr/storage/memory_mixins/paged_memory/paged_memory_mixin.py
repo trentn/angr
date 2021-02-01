@@ -153,6 +153,7 @@ class PagedMemoryMixin(MemoryMixin):
             raise TypeError("Need addr to be resolved to an int by this point")
 
         l.debug("%s.store(%#x, %s, %s)", self.id, addr, data, endness)
+        l.debug("Currently initialized pages: %s" % [hex(page) for page in self._pages.keys()])
 
         pageno, pageoff = self._divide_addr(addr)
         sub_gen = self.PAGE_TYPE._decompose_objects(addr, data, endness, memory=self, **kwargs)

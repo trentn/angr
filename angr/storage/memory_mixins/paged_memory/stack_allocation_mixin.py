@@ -25,7 +25,20 @@ class StackAllocationMixin(PagedMemoryMixin):
         return o
 
     def _initialize_page(self, pageno: int, **kwargs):
+        l.debug("initializing %s" % hex(pageno))
         if pageno != self._red_pageno:
+            # We need to account for holes in the stack allocation, or else
+            # the new_red_pageno check might fail on subsequent calls
+            
+            # for now a hack assuming a stack address starting with 0x7ffffffffXXX
+            if pageno & 0x7ffffffff000 == 0x7ffffffff000:
+                prev_pageno = pageno + 1
+                while not prev_pageno in self._pages:
+                    l.debug("Prev page not initialized: %s" % hex(prev_pageno))
+                    page = super()._initialize_page(prev_pageno, **kwargs)
+                    self._pages[prev_pageno] = page
+                    prev_pageno = prev_pageno + 1
+
             return super()._initialize_page(pageno, **kwargs)
 
         new_red_pageno = (pageno - 1) % ((1 << self.state.arch.bits) // self.page_size)
